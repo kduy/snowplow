@@ -30,7 +30,7 @@ EmrEtlRunner: bumped to 0.12.0
 EmrEtlRunner: now appending region name to raw event files (#1379)
 EmrEtlRunner: added support for moving and archiving timestamped Clojure Collector access logs (#1400)
 EmrEtlRunner: now appending rather than prepending instance names to raw event files (#1404)
-Clojure Collector: changed log filename timestamp format to match CloudFront logs (#1398)
+EmrEtlRunner: changed Clojure Collector log timestamp format to match CloudFront logs (#1398)
 EmrEtlRunner: added dedicated return code for no files to process (#1397)
 EmrEtlRunner: now allowing tsv/*/* and json/*/* as :etl:collector_format (#1284)
 EmrEtlRunner: now performing S3DistCp from processing for tsv/com.amazon.aws.cloudfront/* (#1431)
