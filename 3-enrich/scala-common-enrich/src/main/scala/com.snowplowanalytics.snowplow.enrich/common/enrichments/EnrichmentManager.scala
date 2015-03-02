@@ -23,6 +23,11 @@ import scala.collection.mutable.ListBuffer
 import scalaz._
 import Scalaz._
 
+// json4s
+import org.json4s._
+import org.json4s.JsonDSL._
+import org.json4s.jackson.JsonMethods._
+
 // SnowPlow Utils
 import util.Tap._
 
@@ -282,16 +287,16 @@ object EnrichmentManager {
       }
     }
 
+    // Create the ua_parser_context
     val uaParser = {
       registry.getUaParserEnrichment match {
         case Some(uap) => {
           Option(event.useragent) match {
-            case Some(ua) =>
-              var uaJsonPlaceholder = uap.extractUserAgent(ua)
-            case None => unitSuccess // No fields updated
+            case Some(ua) => uap.extractUserAgent(ua).map(_.some)
+            case None => None.success // No fields updated
           }
         }
-        case None => unitSuccess
+        case None => None.success
       }
     }
 
@@ -371,6 +376,18 @@ object EnrichmentManager {
           }
         case None => unitSuccessNel // No fields updated
         })
+
+    // Assemble array of derived contexts
+    val derived_contexts = List(uaParser) collect {
+      case Success(Some(context)) => context
+    }
+
+    if (derived_contexts.size > 0) {
+      event.derived_contexts = compact(render(
+        ("schema" -> "iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-1") ~
+        ("data"   -> JArray(derived_contexts))
+      ))
+    }
 
     // Some quick and dirty truncation to ensure the load into Redshift doesn't error. Yech this is pretty dirty
     // TODO: move this into the db-specific ETL phase (when written) & _programmatically_ apply to all strings, not just these 6
